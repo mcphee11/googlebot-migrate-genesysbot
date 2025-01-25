@@ -77,6 +77,8 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 		return
 	}
 
+	fmt.Println("Received intents: ", len(intents))
+
 	var allVariables = ""
 	var allTasks = ""
 	var allIntents = ""
@@ -200,6 +202,10 @@ func ListIntents(projectID, lang, keyPath string) ([]*dialogflowpb.Intent, error
 	var intents []*dialogflowpb.Intent
 
 	for intent, status := intentIterator.Next(); status != iterator.Done; {
+		if len(intents) > 1000 {
+			fmt.Println("Error: Does your api key have API admin access??")
+			os.Exit(1)
+		}
 		intents = append(intents, intent)
 		intent, status = intentIterator.Next()
 	}
