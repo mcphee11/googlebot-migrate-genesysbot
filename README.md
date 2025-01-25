@@ -39,7 +39,13 @@ To check the version of the CLI, use the -version flag
 
 You will need to create a service account `json` key to the Google project that holds the Dialogflow ES agent. This is what is then used to authenticate with the apis to download the information. In my example i have it downloaded into my Downloads folder and its called "key.json" yours may well have different name and location.
 
-As the for the permissions required it needs to be able to read the dialogflow agent.
+As the for the permissions required it needs to have `Dialogflow API Admin.`
+
+![](/docs/images/role.png?raw=true)
+
+Ensure you then create a json key for the service account
+
+![](/docs/images/json-key.png?raw=true)
 
 ## using the CLI
 
