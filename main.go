@@ -28,7 +28,7 @@ func main() {
 		return
 	}
 
-	version := "3.0"
+	version := "3.1"
 	textPtr := flag.String("projectId", "", "Google Cloud Project ID")
 	langPtr := flag.String("lang", "", "Dialogflow Language Code. eg: en-AU")
 	namePtr := flag.String("name", "", "Genesys Cloud Bot Flow Name")
