@@ -91,8 +91,12 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 	for _, intent := range intents {
 		var displayName = intent.DisplayName
 
-		if strings.Contains(displayName, " ") {
+		// clean up display name with invalid characters
+		if strings.Contains(displayName, " ") || strings.Contains(displayName, "-") || strings.Contains(displayName, ".") || strings.Contains(displayName, "@") {
 			displayName = strings.ReplaceAll(displayName, " ", "_")
+			displayName = strings.ReplaceAll(displayName, "-", "_")
+			displayName = strings.ReplaceAll(displayName, ".", "_")
+			displayName = strings.ReplaceAll(displayName, "@", "_")
 		}
 		if !strings.Contains(displayName, "Knowledge.KnowledgeBase") {
 			createTask := createTask(displayName)
@@ -104,19 +108,25 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 				entityNameReferences = ""
 				for _, trainingPhrase := range intent.TrainingPhrases {
 					var segment = "            - segments:\n"
+					fmt.Println("Training Phrase: ", trainingPhrase.Parts)
 					for _, part := range trainingPhrase.Parts {
+						// escape quotes if they are in the text
+						if strings.Contains(part.Text, "\"") {
+							part.Text = strings.ReplaceAll(part.Text, "\"", "\\")
+						}
 						// add text to segment
 						segment += fmt.Sprintf("                - text: \"%s\"\n", part.Text)
 						// if text contains entity, add entity to segment
 						if part.EntityType != "" {
-							if strings.Contains(part.EntityType, "@") {
+							// clean up entity name with invalid characters
+							if strings.Contains(part.EntityType, "@") || strings.Contains(part.EntityType, ".") || strings.Contains(part.EntityType, " ") || strings.Contains(part.EntityType, "-") {
 								part.EntityType = strings.ReplaceAll(part.EntityType, "@", "")
-							}
-							if strings.Contains(part.EntityType, ".") {
 								part.EntityType = strings.ReplaceAll(part.EntityType, ".", "_")
+								part.EntityType = strings.ReplaceAll(part.EntityType, " ", "_")
+								part.EntityType = strings.ReplaceAll(part.EntityType, "-", "_")
 							}
 							segment += fmt.Sprintf(`                  entity:
-                    name: %s`, part.EntityType)
+                    name: %s`+"\n", part.EntityType)
 							// add entity to entities if not already there as well as variables
 							if !contains(allSlots, part.EntityType) {
 								allSlots = append(allSlots, part.EntityType)
