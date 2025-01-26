@@ -74,3 +74,19 @@ archy create --file fileName.yaml
 ```
 
 Once you have the flow imported into Genesys Cloud you can then edit it from there. While the Intents, Utterances, Slots, Data & Reusable Tasks get created you will still need to build out the actually use case of what needs to be "done" in each Reusable Task.
+
+## Result
+
+So this is an example of a covid-19 BOT that I had in my google dialogueflow ES
+
+![](/docs/images/google.png?raw=true)
+
+Once I run the program to convert it to a Genesys Digital Bot Flow it passes in all the intents
+
+![](/docs/images/intents.png?raw=true)
+
+And even creates and puts the `Slots` or as google calls them `entities`
+
+![](/docs/images/utterances.png?raw=true)
+
+To keep it simple I have made each slot type be `RegEx` so you will need to then apply the slot type you want as well as the RegEx expression if you want it to stay as that type. You will also need to build out the outcome in the reusable task on what actually needs to happen in the intent.
