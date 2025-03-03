@@ -112,7 +112,7 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 					for _, part := range trainingPhrase.Parts {
 						// escape quotes if they are in the text
 						if strings.Contains(part.Text, "\"") {
-							part.Text = strings.ReplaceAll(part.Text, "\"", "\\")
+							part.Text = strings.ReplaceAll(part.Text, "\"", "\\\"")
 						}
 						// add text to segment
 						segment += fmt.Sprintf("                - text: \"%s\"\n", part.Text)
