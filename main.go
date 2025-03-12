@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
@@ -28,7 +29,8 @@ func main() {
 		return
 	}
 
-	version := "3.2"
+	version := "4.0"
+	typePtr := flag.String("type", "", "Type of output. eg: digitalBot, knowledgeBase")
 	textPtr := flag.String("projectId", "", "Google Cloud Project ID")
 	langPtr := flag.String("lang", "", "Dialogflow Language Code. eg: en-AU")
 	namePtr := flag.String("name", "", "Genesys Cloud Bot Flow Name")
@@ -39,8 +41,8 @@ func main() {
 	flag.Parse()
 
 	switch os.Args[1] {
-	case "-projectId":
-		if namePtr == nil || langPtr == nil || textPtr == nil || keyPathPtr == nil {
+	case "-type":
+		if typePtr == nil || namePtr == nil || langPtr == nil || textPtr == nil || keyPathPtr == nil {
 			fmt.Println("Missing required parameters type -help for more information")
 			return
 		}
@@ -48,7 +50,13 @@ func main() {
 			fmt.Println("Invalid Bot Flow Name")
 			return
 		}
-		buildDigitalBot(*textPtr, *langPtr, *namePtr, *keyPathPtr)
+		if *typePtr == "digitalBot" {
+			buildDigitalBot(*textPtr, *langPtr, *namePtr, *keyPathPtr)
+		}
+		if *typePtr == "knowledgeBase" {
+			buildKnowledgeBaseCSV(*textPtr, *langPtr, *namePtr, *keyPathPtr)
+		}
+
 	case "-version":
 		fmt.Println("Version: ", version)
 	default:
@@ -59,8 +67,9 @@ func main() {
 
 func helpScreen() {
 	fmt.Println(`
-The below parameters are required to build a Genesys Cloud Bot Flow:
+The below parameters are required to build a Genesys Cloud Bot Flow or Knowledge Base CSV:
 
+-type: digitalBot or knowledgeBase
 -projectId: Google Cloud Project ID
 -lang: Dialogflow Language Code. eg: en-AU
 -name: Genesys Cloud Bot Flow Name
@@ -98,7 +107,7 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 			displayName = strings.ReplaceAll(displayName, ".", "_")
 			displayName = strings.ReplaceAll(displayName, "@", "_")
 		}
-		if !strings.Contains(displayName, "Knowledge.KnowledgeBase") {
+		if !strings.Contains(displayName, "Knowledge_KnowledgeBase") {
 			createTask := createTask(displayName)
 			allTasks += fmt.Sprintf("\n%s", createTask)
 			createIntent := createIntent(displayName)
@@ -180,6 +189,97 @@ func buildDigitalBot(projectId, lang, flowName, keyPath string) {
 	createYaml := createYaml(flowName, allVariables, allTasks, allIntents, allUtterances, allEntities, allEntityTypes)
 	os.WriteFile(fmt.Sprintf("%s.yaml", flowName), []byte(createYaml), 0777)
 	fmt.Println("Flow created: ", flowName)
+}
+
+func buildKnowledgeBaseCSV(projectId, lang, fileName, keyPath string) {
+	intents, err := ListIntents(projectId, lang, keyPath)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+
+	fmt.Println("Received intents: ", len(intents))
+
+	// CSV file format
+	// Published, my article, this is the body, training phrase 1, training phrase 2, ...,
+	allArticles := [][]string{
+		{"state", "title", "textContent", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing", "phrasing"},
+	}
+
+	for _, intent := range intents {
+		var displayName = intent.DisplayName
+		row := []string{}
+
+		// clean up display name with invalid characters
+		if strings.Contains(displayName, " ") || strings.Contains(displayName, "-") || strings.Contains(displayName, ".") || strings.Contains(displayName, "@") {
+			displayName = strings.ReplaceAll(displayName, " ", "_")
+			displayName = strings.ReplaceAll(displayName, "-", "_")
+			displayName = strings.ReplaceAll(displayName, ".", "_")
+			displayName = strings.ReplaceAll(displayName, "@", "_")
+		}
+		if !strings.Contains(displayName, "Knowledge_KnowledgeBase") {
+			row = append(row, "Published")
+			row = append(row, displayName)
+
+			if intent.GetMessages() != nil {
+				if intent.GetMessages()[0].GetText().GetText() != nil {
+					row = append(row, intent.GetMessages()[0].GetText().Text[0])
+				} else {
+					row = append(row, "ENTER_BODY_HERE")
+				}
+			} else {
+				row = append(row, "ENTER_BODY_HERE")
+			}
+
+			if len(intent.TrainingPhrases) > 0 {
+
+				for _, trainingPhrase := range intent.TrainingPhrases {
+					fmt.Println("Training Phrase: ", trainingPhrase.Parts)
+					var phrase = ""
+					for _, part := range trainingPhrase.Parts {
+						fmt.Println("Part: ", part.Text)
+						// escape quotes if they are in the text
+						if strings.Contains(part.Text, ",") {
+							part.Text = strings.ReplaceAll(part.Text, ",", "")
+						}
+						if strings.Contains(part.Text, "\"") {
+							part.Text = strings.ReplaceAll(part.Text, "\"", "'")
+						}
+						phrase += part.Text
+					}
+					row = append(row, phrase)
+				}
+
+			} else {
+				fmt.Println("No utterance")
+			}
+			allArticles = append(allArticles, row)
+			fmt.Println("Completed Intent: ", displayName)
+		}
+	}
+
+	fmt.Println("building csv")
+	//os.WriteFile(fmt.Sprintf("%s.csv", fileName), []byte(allArticles), 0777)
+	csvExport(allArticles, fileName)
+	fmt.Println("CSV File created: ", fileName)
+}
+
+func csvExport(data [][]string, name string) error {
+	file, err := os.Create(fmt.Sprintf("%s.csv", name))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for _, value := range data {
+		if err := writer.Write(value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func contains(slice []string, item string) bool {

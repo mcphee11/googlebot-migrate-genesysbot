@@ -24,11 +24,12 @@ If you run it without any parameters you will be taken to the `help screen`
 	88 8  8 88e8 88     88  8 88ee 88ee 88ee8ee8 88  8 88   8 88ee
 
 
-The below parameters are required to build a Genesys Cloud Bot Flow:
+The below parameters are required to build a Genesys Cloud Bot Flow or Knowledge Base CSV:
 
+-type: digitalBot or knowledgeBase
 -projectId: Google Cloud Project ID
 -lang: Dialogflow Language Code. eg: en-AU
--name: Genesys Cloud Bot Flow Name
+-name: Genesys Cloud Bot Flow Name or CSV file name
 -keyPath: Google Cloud Key Path eg: /path/to/key.json
 
 To check the version of the CLI, use the -version flag
@@ -52,7 +53,7 @@ Ensure you then create a json key for the service account
 To run the program you will need to supply the parameters like the below:
 
 ```
-mcpheeware-migrate -projectId my-projectId -lang en-AU -name test -keyPath ~/Downloads/key.json
+mcpheeware-migrate -type digitalBot -projectId my-projectId -lang en-AU -name test -keyPath ~/Downloads/key.json
 ```
 
 This will then output a `yaml` file that can then be used by [Archy](https://developer.genesys.cloud/devapps/archy/) to either create a `architect` digitalBotFlow input file type or directly PUSH the flow to Genesys Cloud
@@ -90,3 +91,13 @@ And even creates and puts the `Slots` or as google calls them `entities`
 ![](/docs/images/utterances.png?raw=true)
 
 To keep it simple I have made each slot type be `RegEx` so you will need to then apply the slot type you want as well as the RegEx expression if you want it to stay as that type. You will also need to build out the outcome in the reusable task on what actually needs to happen in the intent.
+
+## Knowledge CSV Import feature
+
+If you have used the new CSV file feature in version 4+ of this CLI you can then use it to import directly into the Genesys Cloud KnowledgeBase as articles using the Web GUI import option. `NOTE: right now I have made this support 100 training phrases` in the article but this can be expanded if required in the CSV file creation columns.
+
+![](/docs/images/upload_csv.png?raw=true)
+
+Then once uploaded you will be able to vew them from within the articles as well as see the training phrases setup as Phrasings in teh article itself
+
+![](/docs/images/knowledgeBase.png?raw=true)

@@ -28,3 +28,6 @@ go.work.sum
 *.yaml
 *.i3DigitalBotFlow
 .vscode
+
+# CSV output
+*.csv
